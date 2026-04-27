@@ -10,13 +10,15 @@ export default function ProfileForm({ setUser }) {
     phone: ""
   });
 
-  const submit = async () => {
-    await api.post("/user", form);
+const submit = async () => {
+  const res = await api.post("/user", form);
 
-    // reload user from backend (session check)
-    const res = await api.get("/user");
-    setUser(res.data);
-  };
+  // use response directly
+  setUser({
+    id: res.data.userId,
+    ...form
+  });
+};
 
   return (
     <div className="container">
