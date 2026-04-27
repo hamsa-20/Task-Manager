@@ -12,7 +12,7 @@ export default function TaskForm({ reload }) {
 
       await api.post("/tasks", {
         ...task,
-        user_id: user.id // ✅ IMPORTANT
+        user_id: user.id 
       });
 
       setTask({});

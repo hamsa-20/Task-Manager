@@ -7,32 +7,26 @@ const db = require("./config/db");
 
 const app = express();
 
-// ✅ middleware
 app.use(express.json());
 
-// ✅ CORS (allow all - safest for now)
 app.use(cors());
 
-// ✅ ROUTES
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 
 app.use("/user", userRoutes);
 app.use("/tasks", taskRoutes);
 
-// ✅ test route
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-// ✅ PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on ${PORT}`);
 });
 
-// ✅ AUTO CREATE TABLES
 db.query(`
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,

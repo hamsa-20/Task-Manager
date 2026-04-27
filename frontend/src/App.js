@@ -38,10 +38,8 @@ function App() {
     }
   }, []);
 
-  // 👉 If no user → show form
   if (!user) return <ProfileForm setUser={setUser} />;
 
-  // 👉 If user exists → show dashboard
   return <Dashboard user={user} />;
 }
 
