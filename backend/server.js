@@ -1,38 +1,17 @@
 require("dotenv").config();
 
 const express = require("express");
-const session = require("express-session");
 const cors = require("cors");
 
 const db = require("./config/db");
 
 const app = express();
 
-
-app.set("trust proxy", 1);
-
-// middleware
+// ✅ middleware
 app.use(express.json());
 
-const cors = require("cors");
-
-app.use(cors({
-  origin: [
-    "https://taskmanager-sage-alpha.vercel.app",
-    "https://task-manager-q1j8.vercel.app"
-  ],
-  credentials: true
-}));
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || "secret123",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,        // required for HTTPS
-    sameSite: "none"     // allow cross-origin cookies
-  }
-}));
+// ✅ CORS (allow all - safest for now)
+app.use(cors());
 
 // ✅ ROUTES
 const userRoutes = require("./routes/userRoutes");
@@ -41,12 +20,12 @@ const taskRoutes = require("./routes/taskRoutes");
 app.use("/user", userRoutes);
 app.use("/tasks", taskRoutes);
 
-// test route
+// ✅ test route
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-// PORT FIX
+// ✅ PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
