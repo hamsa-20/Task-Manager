@@ -33,33 +33,37 @@
 const db = require("../config/db");
 
 exports.createUser = (req, res) => {
-  console.log("BODY:", req.body); // 👈 ADD THIS
+  console.log("BODY:", req.body);
 
   const { full_name, designation, employee_id, email, phone } = req.body;
 
   if (!full_name || !designation || !employee_id || !email || !phone) {
-    console.log("Missing fields ❌");
-    return res.status(400).send({ error: "All fields required" });
+    return res.status(400).json({ error: "All fields required" });
   }
 
-  db.query(
-    "INSERT INTO users (full_name, designation, employee_id, email, phone) VALUES (?, ?, ?, ?, ?)",
-    [full_name, designation, employee_id, email, phone],
-    (err, result) => {
-      if (err) {
-        console.error("DB ERROR:", err); // 👈 ADD THIS
-        return res.status(500).send(err);
-      }
+  const sql = `
+    INSERT INTO users (full_name, designation, employee_id, email, phone)
+    VALUES (?, ?, ?, ?, ?)
+  `;
 
-      res.send({
-        success: true,
-        userId: result.insertId
+  db.query(sql, [full_name, designation, employee_id, email, phone], (err, result) => {
+    if (err) {
+      console.error("DB ERROR FULL:", err);
+
+      // 👇 IMPORTANT: return readable error
+      return res.status(500).json({
+        message: "Database error",
+        error: err.sqlMessage || err.message
       });
     }
-  );
+
+    res.json({
+      success: true,
+      userId: result.insertId
+    });
+  });
 };
 
 exports.getUser = (req, res) => {
-
-  res.send(null);
+  res.json(null);
 };
