@@ -8,25 +8,33 @@ const db = require("./config/db");
 
 const app = express();
 
+// 🔥 IMPORTANT FOR RENDER (proxy)
+app.set("trust proxy", 1);
+
 // middleware
 app.use(express.json());
 
+// 🔥 CORS FIX (VERY IMPORTANT)
 app.use(cors({
-  origin: true,
+  origin: ["https://taskmanager-sage-alpha.vercel.app/"], 
   credentials: true
 }));
 
+// 🔥 SESSION FIX (CRITICAL)
 app.use(session({
   secret: process.env.SESSION_SECRET || "secret123",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    secure: true,        // required for HTTPS
+    sameSite: "none"     // allow cross-origin cookies
+  }
 }));
 
-// ✅ ROUTES IMPORT
+// ✅ ROUTES
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 
-// ✅ USE ROUTES
 app.use("/user", userRoutes);
 app.use("/tasks", taskRoutes);
 
@@ -41,7 +49,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on ${PORT}`);
 });
-
 
 // ✅ AUTO CREATE TABLES
 db.query(`
