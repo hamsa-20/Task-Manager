@@ -13,11 +13,14 @@ export default function ProfileForm({ setUser }) {
 const submit = async () => {
   const res = await api.post("/user", form);
 
-  // use response directly
-  setUser({
+  const userData = {
     id: res.data.userId,
     ...form
-  });
+  };
+
+  localStorage.setItem("user", JSON.stringify(userData)); 
+
+  setUser(userData);
 };
 
   return (

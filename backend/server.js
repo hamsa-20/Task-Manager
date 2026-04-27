@@ -8,18 +8,20 @@ const db = require("./config/db");
 
 const app = express();
 
-// 🔥 IMPORTANT FOR RENDER (proxy)
+
 app.set("trust proxy", 1);
 
 // middleware
 app.use(express.json());
 
 app.use(cors({
-  origin: "https://taskmanager-sage-alpha.vercel.app",
+  origin: [
+    "http://localhost:3000",                     
+    "https://taskmanager-sage-alpha.vercel.app"  
+  ],
   credentials: true
 }));
 
-// 🔥 SESSION FIX (CRITICAL)
 app.use(session({
   secret: process.env.SESSION_SECRET || "secret123",
   resave: false,

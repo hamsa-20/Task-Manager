@@ -13,7 +13,11 @@ exports.createTask = (req, res) => {
 };
 
 exports.getTasks = (req, res) => {
-  taskModel.getTasksByUser(req.session.userId, (err, result) => {
+  const userId = req.query.userId; // 
+
+  if (!userId) return res.status(401).send("No user");
+
+  taskModel.getTasksByUser(userId, (err, result) => {
     res.send(result);
   });
 };

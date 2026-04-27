@@ -2,6 +2,19 @@ import api from "../api";
 
 export default function TaskTable({ tasks, reload }) {
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const call = async (url) => {
+    try {
+      if (!user) return;
+
+      await api.post(`${url}?userId=${user.id}`); // ✅ IMPORTANT
+      reload();
+    } catch (err) {
+      console.error("Task action error:", err);
+    }
+  };
+
   return (
     <div className="card">
       <h3>Tasks</h3>
@@ -37,16 +50,16 @@ export default function TaskTable({ tasks, reload }) {
 
               <td>
                 <button className="start"
-                  onClick={()=>api.post(`/tasks/start/${t.id}`).then(reload)}>Start</button>
+                  onClick={() => call(`/tasks/start/${t.id}`)}>Start</button>
 
                 <button className="pause"
-                  onClick={()=>api.post(`/tasks/pause/${t.id}`).then(reload)}>Pause</button>
+                  onClick={() => call(`/tasks/pause/${t.id}`)}>Pause</button>
 
                 <button className="resume"
-                  onClick={()=>api.post(`/tasks/resume/${t.id}`).then(reload)}>Resume</button>
+                  onClick={() => call(`/tasks/resume/${t.id}`)}>Resume</button>
 
                 <button className="stop"
-                  onClick={()=>api.post(`/tasks/stop/${t.id}`).then(reload)}>Stop</button>
+                  onClick={() => call(`/tasks/stop/${t.id}`)}>Stop</button>
               </td>
             </tr>
           ))}
