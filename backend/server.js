@@ -15,10 +15,8 @@ app.set("trust proxy", 1);
 app.use(express.json());
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",                     
-    "https://taskmanager-sage-alpha.vercel.app"  
-  ],
+  origin:                     
+    "https://taskmanager-sage-alpha.vercel.app"  ,
   credentials: true
 }));
 
