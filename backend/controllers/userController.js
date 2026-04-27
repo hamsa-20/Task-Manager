@@ -33,9 +33,12 @@
 const db = require("../config/db");
 
 exports.createUser = (req, res) => {
+  console.log("BODY:", req.body); // 👈 ADD THIS
+
   const { full_name, designation, employee_id, email, phone } = req.body;
 
   if (!full_name || !designation || !employee_id || !email || !phone) {
+    console.log("Missing fields ❌");
     return res.status(400).send({ error: "All fields required" });
   }
 
@@ -44,7 +47,7 @@ exports.createUser = (req, res) => {
     [full_name, designation, employee_id, email, phone],
     (err, result) => {
       if (err) {
-        console.error("DB ERROR:", err); // 🔥 IMPORTANT
+        console.error("DB ERROR:", err); // 👈 ADD THIS
         return res.status(500).send(err);
       }
 
