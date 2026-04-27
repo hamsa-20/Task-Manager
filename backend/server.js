@@ -14,9 +14,8 @@ app.set("trust proxy", 1);
 // middleware
 app.use(express.json());
 
-// 🔥 CORS FIX (VERY IMPORTANT)
 app.use(cors({
-  origin: ["https://taskmanager-sage-alpha.vercel.app/"], 
+  origin: "https://taskmanager-sage-alpha.vercel.app",
   credentials: true
 }));
 
