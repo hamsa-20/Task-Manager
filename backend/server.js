@@ -22,11 +22,7 @@ app.get("/", (req, res) => res.send("API running"));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on ${PORT}`);
-});
-
-// Create tables
+// Create tables first, THEN start server
 db.query(`
   CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -36,7 +32,13 @@ db.query(`
     email VARCHAR(100),
     phone VARCHAR(20)
   )
-`, (err) => { if (err) console.error("Users table error:", err.message); });
+`, (err) => {
+  if (err) {
+    console.error("Users table error:", err.message);
+  } else {
+    console.log("Users table ready");
+  }
+});
 
 db.query(`
   CREATE TABLE IF NOT EXISTS tasks (
@@ -52,4 +54,14 @@ db.query(`
     last_started_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
-`, (err) => { if (err) console.error("Tasks table error:", err.message); });
+`, (err) => {
+  if (err) {
+    console.error("Tasks table error:", err.message);
+  } else {
+    console.log("Tasks table ready");
+  }
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on ${PORT}`);
+});
