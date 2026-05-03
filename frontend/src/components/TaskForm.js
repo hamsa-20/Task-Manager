@@ -6,14 +6,10 @@ export default function TaskForm({ reload }) {
 
   const submit = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = localStorage.getItem("userId");
+      if (!userId) return alert("User not found");
 
-      if (!user) return alert("User not found");
-
-      await api.post("/tasks", {
-        ...task,
-        user_id: user.id 
-      });
+      await api.post("/tasks", task); // userId will go via header
 
       setTask({});
       reload();

@@ -1,106 +1,168 @@
-const taskModel = require("../models/taskModel");
+const db = require("../config/db");
 
 exports.createTask = (req, res) => {
-  const data = {
-    user_id: req.session.userId,
-    task_name: req.body.task_name,
-    comment: req.body.comment,
-    expected_time: req.body.expected_time,
-    status: "pending"
-  };
+  const userId = req.headers.userid;
+  const { task_name, comment, expected_time } = req.body;
 
-  taskModel.createTask(data, () => res.send({ success: true }));
-};
+  if (!task_name) {
+    return res.status(400).json({ error: "Task name required" });
+  }
 
-exports.getTasks = (req, res) => {
-  const userId = req.query.userId; // 
+  const sql = `INSERT INTO tasks (user_id, task_name, comment, expected_time, status, total_time) 
+               VALUES (?, ?, ?, ?, 'pending', 0)`;
 
-  if (!userId) return res.status(401).send("No user");
-
-  taskModel.getTasksByUser(userId, (err, result) => {
-    res.send(result);
+  db.query(sql, [userId, task_name, comment, expected_time], (err, result) => {
+    if (err) {
+      console.error("CREATE TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true, taskId: result.insertId });
   });
 };
 
+exports.getTasks = (req, res) => {
+  const userId = req.headers.userid;
 
+  if (!userId) return res.status(401).json({ message: "No user" });
 
-//  START TASK (FIXED: only one task running)
-exports.startTask = (req, res) => {
-
-  // Pause any running task first
-  taskModel.updateTask(
-    null,
-    "status='paused', total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW()) WHERE status='in_progress'",
-    () => {
-
-      // Start selected task
-      taskModel.updateTask(
-        req.params.id,
-        "status='in_progress', last_started_at=NOW(), start_time=IFNULL(start_time, NOW())",
-        () => res.send({ success: true })
-      );
-
+  db.query(
+    "SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC",
+    [userId],
+    (err, result) => {
+      if (err) {
+        console.error("GET TASKS ERROR:", err);
+        return res.status(500).json({ error: "Database error: " + err.message });
+      }
+      res.json(result);
     }
   );
 };
 
+exports.startTask = (req, res) => {
+  const userId = req.headers.userid;
 
+  // First pause any currently running task for this user
+  const pauseSql = `
+    UPDATE tasks 
+    SET status='paused', 
+        total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW())
+    WHERE status='in_progress' AND user_id = ?
+  `;
+
+  db.query(pauseSql, [userId], (err) => {
+    if (err) {
+      console.error("PAUSE EXISTING ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+
+    // Now start the selected task
+    const startSql = `
+      UPDATE tasks 
+      SET status='in_progress', 
+          last_started_at=NOW(), 
+          start_time=IFNULL(start_time, NOW())
+      WHERE id = ? AND user_id = ?
+    `;
+
+    db.query(startSql, [req.params.id, userId], (err) => {
+      if (err) {
+        console.error("START TASK ERROR:", err);
+        return res.status(500).json({ error: "Database error: " + err.message });
+      }
+      res.json({ success: true });
+    });
+  });
+};
 
 exports.pauseTask = (req, res) => {
-  taskModel.updateTask(
-    req.params.id,
-    "status='paused', total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW())",
-    () => res.send({ success: true })
-  );
+  const userId = req.headers.userid;
+
+  const sql = `
+    UPDATE tasks 
+    SET status='paused', 
+        total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW())
+    WHERE id = ? AND user_id = ?
+  `;
+
+  db.query(sql, [req.params.id, userId], (err) => {
+    if (err) {
+      console.error("PAUSE TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true });
+  });
 };
 
 exports.resumeTask = (req, res) => {
-  taskModel.updateTask(
-    req.params.id,
-    "status='in_progress', last_started_at=NOW()",
-    () => res.send({ success: true })
-  );
+  const userId = req.headers.userid;
+
+  const sql = `
+    UPDATE tasks 
+    SET status='in_progress', 
+        last_started_at=NOW()
+    WHERE id = ? AND user_id = ?
+  `;
+
+  db.query(sql, [req.params.id, userId], (err) => {
+    if (err) {
+      console.error("RESUME TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true });
+  });
 };
 
 exports.stopTask = (req, res) => {
-  taskModel.updateTask(
-    req.params.id,
-    "status='completed', total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW()), end_time=NOW()",
-    () => res.send({ success: true })
-  );
+  const userId = req.headers.userid;
+
+  const sql = `
+    UPDATE tasks 
+    SET status='completed', 
+        total_time = total_time + TIMESTAMPDIFF(SECOND, last_started_at, NOW()),
+        end_time=NOW()
+    WHERE id = ? AND user_id = ?
+  `;
+
+  db.query(sql, [req.params.id, userId], (err) => {
+    if (err) {
+      console.error("STOP TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true });
+  });
 };
 
-
-
-/*  EDIT TASK (for comments requirement) */
 exports.editTask = (req, res) => {
+  const userId = req.headers.userid;
   const { task_name, comment } = req.body;
 
-  taskModel.updateTask(
-    req.params.id,
-    "task_name=?, comment=?",
-    (err) => res.send({ success: true })
-  );
+  const sql = `UPDATE tasks SET task_name=?, comment=? WHERE id=? AND user_id=?`;
+
+  db.query(sql, [task_name, comment, req.params.id, userId], (err) => {
+    if (err) {
+      console.error("EDIT TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true });
+  });
 };
 
-
-
-/*  MANUAL ENTRY  */
 exports.manualTask = (req, res) => {
+  const userId = req.headers.userid;
   const { task_name, start_time, end_time } = req.body;
 
   const total = Math.floor(
     (new Date(end_time) - new Date(start_time)) / 1000
   );
 
-  const data = {
-    user_id: req.session.userId,
-    task_name,
-    start_time,
-    end_time,
-    total_time: total,
-    status: "completed"
-  };
+  const sql = `INSERT INTO tasks (user_id, task_name, start_time, end_time, total_time, status) 
+               VALUES (?, ?, ?, ?, ?, 'completed')`;
 
-  taskModel.createTask(data, () => res.send({ success: true }));
+  db.query(sql, [userId, task_name, start_time, end_time, total], (err, result) => {
+    if (err) {
+      console.error("MANUAL TASK ERROR:", err);
+      return res.status(500).json({ error: "Database error: " + err.message });
+    }
+    res.json({ success: true, taskId: result.insertId });
+  });
 };

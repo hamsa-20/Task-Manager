@@ -1,42 +1,34 @@
-// import { useEffect, useState } from "react";
-// import api from "./api";
-// import ProfileForm from "./components/ProfileForm";
-// import Dashboard from "./components/Dashboard";
-
-// function App() {
-//   const [user, setUser] = useState(undefined);
-
-//   useEffect(() => {
-//     api.get("/user")
-//       .then(res => setUser(res.data))
-//       .catch(() => setUser(null));
-//   }, []);
-
-//   if (user === undefined) return <div>Loading...</div>;
-
-//   if (!user) return <ProfileForm setUser={setUser} />;
-
-//   return <Dashboard />;
-// }
-
-// export default App;
-
-
 import { useState, useEffect } from "react";
+import api from "./api";
 import ProfileForm from "./components/ProfileForm";
 import Dashboard from "./components/Dashboard";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined); // undefined = loading
 
-  // ✅ Load user from localStorage on app start
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
+    const userId = localStorage.getItem("userId");
 
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (!userId) {
+      setUser(null); // no user, show profile form
+      return;
     }
+
+    // fetch user from backend using userId header (api.js attaches it automatically)
+    api.get("/user")
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(err => {
+        console.error("Failed to load user:", err);
+        // if user not found in DB, clear localStorage and show form
+        localStorage.removeItem("userId");
+        localStorage.removeItem("user");
+        setUser(null);
+      });
   }, []);
+
+  if (user === undefined) return <div className="container"><p>Loading...</p></div>;
 
   if (!user) return <ProfileForm setUser={setUser} />;
 

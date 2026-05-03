@@ -1,6 +1,10 @@
 exports.checkSession = (req, res, next) => {
-  if (!req.session.userId) {
-    return res.status(401).send({ message: "Unauthorized" });
+  const userId = req.headers.userid;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: No user session found" });
   }
+
+  req.userId = userId;
   next();
 };
