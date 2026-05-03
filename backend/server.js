@@ -2,14 +2,27 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const session = require("express-session"); // ✅ ADD THIS
 
 const db = require("./config/db");
 
 const app = express();
 
 app.use(express.json());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
-app.use(cors());
+app.use(session({
+  secret: "secret-key",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    secure: false,   // (Render uses HTTP internally)
+    httpOnly: true
+  }
+}));
 
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
