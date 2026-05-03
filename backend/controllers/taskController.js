@@ -11,10 +11,10 @@ exports.createTask = (req, res) => {
   const sql = `INSERT INTO tasks (user_id, task_name, comment, expected_time, status, total_time) 
                VALUES (?, ?, ?, ?, 'pending', 0)`;
 
-  db.query(sql, [userId, task_name, comment, expected_time], (err, result) => {
+  db.query(sql, [userId, task_name, comment || null, expected_time || null], (err, result) => {
     if (err) {
-      console.error("CREATE TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("CREATE TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true, taskId: result.insertId });
   });
@@ -30,8 +30,8 @@ exports.getTasks = (req, res) => {
     [userId],
     (err, result) => {
       if (err) {
-        console.error("GET TASKS ERROR:", err);
-        return res.status(500).json({ error: "Database error: " + err.message });
+        console.error("GET TASKS ERROR:", err.message);
+        return res.status(500).json({ error: err.message });
       }
       res.json(result);
     }
@@ -51,11 +51,10 @@ exports.startTask = (req, res) => {
 
   db.query(pauseSql, [userId], (err) => {
     if (err) {
-      console.error("PAUSE EXISTING ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("PAUSE EXISTING ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
 
-    // Now start the selected task
     const startSql = `
       UPDATE tasks 
       SET status='in_progress', 
@@ -66,8 +65,8 @@ exports.startTask = (req, res) => {
 
     db.query(startSql, [req.params.id, userId], (err) => {
       if (err) {
-        console.error("START TASK ERROR:", err);
-        return res.status(500).json({ error: "Database error: " + err.message });
+        console.error("START TASK ERROR:", err.message);
+        return res.status(500).json({ error: err.message });
       }
       res.json({ success: true });
     });
@@ -86,8 +85,8 @@ exports.pauseTask = (req, res) => {
 
   db.query(sql, [req.params.id, userId], (err) => {
     if (err) {
-      console.error("PAUSE TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("PAUSE TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
@@ -105,8 +104,8 @@ exports.resumeTask = (req, res) => {
 
   db.query(sql, [req.params.id, userId], (err) => {
     if (err) {
-      console.error("RESUME TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("RESUME TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
@@ -125,8 +124,8 @@ exports.stopTask = (req, res) => {
 
   db.query(sql, [req.params.id, userId], (err) => {
     if (err) {
-      console.error("STOP TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("STOP TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
@@ -140,8 +139,8 @@ exports.editTask = (req, res) => {
 
   db.query(sql, [task_name, comment, req.params.id, userId], (err) => {
     if (err) {
-      console.error("EDIT TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("EDIT TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
@@ -160,8 +159,8 @@ exports.manualTask = (req, res) => {
 
   db.query(sql, [userId, task_name, start_time, end_time, total], (err, result) => {
     if (err) {
-      console.error("MANUAL TASK ERROR:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
+      console.error("MANUAL TASK ERROR:", err.message);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true, taskId: result.insertId });
   });
