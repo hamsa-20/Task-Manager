@@ -26,7 +26,7 @@ exports.getTasks = (req, res) => {
   if (!userId) return res.status(401).json({ message: "No user" });
 
   db.query(
-    "SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC",
+    "SELECT * FROM tasks WHERE user_id = ? ORDER BY id DESC",
     [userId],
     (err, result) => {
       if (err) {

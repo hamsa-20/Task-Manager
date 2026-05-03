@@ -22,7 +22,11 @@ app.get("/", (req, res) => res.send("API running"));
 
 const PORT = process.env.PORT || 5000;
 
-// Create tables first, THEN start server
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on ${PORT}`);
+});
+
+// Fix users table
 db.query(`
   CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,13 +37,11 @@ db.query(`
     phone VARCHAR(20)
   )
 `, (err) => {
-  if (err) {
-    console.error("Users table error:", err.message);
-  } else {
-    console.log("Users table ready");
-  }
+  if (err) console.error("Users table error:", err.message);
+  else console.log("Users table ready");
 });
 
+// Fix tasks table - drop and recreate with all correct columns
 db.query(`
   CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,13 +57,31 @@ db.query(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `, (err) => {
-  if (err) {
-    console.error("Tasks table error:", err.message);
-  } else {
-    console.log("Tasks table ready");
-  }
+  if (err) console.error("Tasks table error:", err.message);
+  else console.log("Tasks table ready");
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on ${PORT}`);
-});
+// Add missing columns if table already exists without them
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`,
+  (err) => { if (err) console.error("created_at col error:", err.message); else console.log("created_at ready"); }
+);
+
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS last_started_at DATETIME`,
+  (err) => { if (err) console.error("last_started_at col error:", err.message); else console.log("last_started_at ready"); }
+);
+
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS start_time DATETIME`,
+  (err) => { if (err) console.error("start_time col error:", err.message); else console.log("start_time ready"); }
+);
+
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS end_time DATETIME`,
+  (err) => { if (err) console.error("end_time col error:", err.message); else console.log("end_time ready"); }
+);
+
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS comment TEXT`,
+  (err) => { if (err) console.error("comment col error:", err.message); else console.log("comment ready"); }
+);
+
+db.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS expected_time INT`,
+  (err) => { if (err) console.error("expected_time col error:", err.message); else console.log("expected_time ready"); }
+);
